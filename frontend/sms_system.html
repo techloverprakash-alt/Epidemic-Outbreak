@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Alert SMS System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --card: #1a2236;
+    --border: #2a3550;
+    --accent: #f59e0b;
+    --accent2: #ef4444;
+    --green: #10b981;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --glow: rgba(245, 158, 11, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(245,158,11,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(239,68,68,0.05) 0%, transparent 50%);
+  }
+
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-icon { font-size: 24px; }
+  .header h1 { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+  .header p { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+  .tab {
+    flex: 1; padding: 10px;
+    border: none; border-radius: 8px;
+    cursor: pointer; font-family: 'Sora', sans-serif;
+    font-size: 13px; font-weight: 600;
+    background: transparent; color: var(--muted);
+    transition: all 0.2s;
+  }
+  .tab.active { background: var(--card); color: var(--accent); border: 1px solid var(--border); }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--accent); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  input, select {
+    width: 100%; padding: 12px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-family: 'Sora', sans-serif; font-size: 14px;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+  select option { background: var(--surface); }
+
+  /* BUTTONS */
+  .btn {
+    padding: 12px 24px; border: none; border-radius: 10px;
+    cursor: pointer; font-family: 'Sora', sans-serif;
+    font-size: 14px; font-weight: 600;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #d97706; transform: translateY(-1px); }
+  .btn-danger { background: var(--accent2); color: #fff; }
+  .btn-danger:hover { background: #dc2626; transform: translateY(-1px); }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { background: #059669; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* CONFIG SECTION */
+  .config-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .config-box .key { color: var(--accent); }
+  .config-box .val { color: var(--green); }
+
+  /* AGENT TABLE */
+  .agent-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .agent-table th {
+    text-align: left; padding: 10px 12px;
+    background: var(--surface); color: var(--muted);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .agent-table td { padding: 12px; border-bottom: 1px solid var(--border); }
+  .agent-table tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--accent2); }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--accent); }
+
+  /* ALERT SIMULATOR */
+  .district-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .district-btn {
+    padding: 10px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer;
+    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
+    transition: all 0.2s; text-align: center;
+  }
+  .district-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .district-btn.selected { background: rgba(239,68,68,0.15); border-color: var(--accent2); color: var(--accent2); }
+
+  /* LOG */
+  .log-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+  .log-entry { display: flex; gap: 8px; }
+  .log-time { color: var(--muted); }
+  .log-ok { color: var(--green); }
+  .log-err { color: var(--accent2); }
+  .log-info { color: var(--accent); }
+
+  /* TWILIO SETUP */
+  .setup-step {
+    display: flex; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .setup-step:last-child { border-bottom: none; }
+  .step-num {
+    width: 28px; height: 28px;
+    background: var(--accent); color: #000;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-content { flex: 1; }
+  .step-content h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .step-content p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .step-content a { color: var(--accent); text-decoration: none; }
+  .step-content code {
+    background: var(--surface); padding: 2px 6px;
+    border-radius: 4px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--green);
+  }
+
+  /* NOTIFICATION */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px;
+    font-size: 13px; font-weight: 600;
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.3s; z-index: 999;
+    max-width: 300px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error { border-left: 3px solid var(--accent2); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .row { grid-template-columns: 1fr; } .district-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .sms-preview {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: pre-wrap;
+  }
+
+  .count-box {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px;
+    margin-bottom: 12px;
+  }
+  .count-num { font-size: 28px; font-weight: 700; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+  .count-label { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🏥</div>
+  <div>
+    <h1>Health Alert SMS System</h1>
+    <p>District-wise Auto SMS · Twilio Powered</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('register')">👤 Agent Register</button>
+    <button class="tab" onclick="showTab('agents')">📋 Registered Agents</button>
+    <button class="tab" onclick="showTab('trigger')">🚨 Trigger Alert</button>
+    <button class="tab" onclick="showTab('setup')">⚙️ Setup Guide</button>
+  </div>
+
+  <!-- REGISTER TAB -->
+  <div id="tab-register" class="panel active">
+    <div class="card">
+      <div class="card-title">🔐 Agent Registration</div>
+      <div class="row">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="reg-username" placeholder="HealthAgent_01">
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="tel" id="reg-mobile" placeholder="9876543210" maxlength="10">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Your District</label>
+        <select id="reg-district">
+          <option value="">-- Select District --</option>
+          <option>Chennai</option><option>Coimbatore</option><option>Madurai</option>
+          <option>Salem</option><option>Tiruchirappalli</option><option>Tirunelveli</option>
+          <option>Vellore</option><option>Erode</option><option>Tiruppur</option>
+          <option>Dindigul</option><option>Thanjavur</option><option>Ranipet</option>
+          <option>Krishnagiri</option><option>Dharmapuri</option><option>Nagapattinam</option>
+          <option>Cuddalore</option><option>Villupuram</option><option>Kancheepuram</option>
+          <option>Chengalpattu</option><option>Tenkasi</option><option>Virudhunagar</option>
+          <option>Ramanathapuram</option><option>Sivaganga</option><option>Pudukkottai</option>
+          <option>Karur</option><option>Namakkal</option><option>Perambalur</option>
+          <option>Ariyalur</option><option>Kallakurichi</option><option>Mayiladuthurai</option>
+          <option>Tirupattur</option><option>Tiruvarur</option><option>Nilgiris</option>
+          <option>Thoothukudi</option><option>Kanyakumari</option><option>Tiruvannamalai</option>
+          <option>Tiruvallur</option><option>Tiruvannamalai</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="registerAgent()">🔑 Login & Register</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📱 SMS Preview (what agent receives)</div>
+      <div class="sms-preview" id="sms-preview">Fill the form above to preview the SMS that will be sent...</div>
+    </div>
+  </div>
+
+  <!-- AGENTS TAB -->
+  <div id="tab-agents" class="panel">
+    <div class="card">
+      <div class="card-title">📋 All Registered Agents</div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <div class="count-box" style="flex:1;min-width:150px">
+          <div>
+            <div class="count-num" id="total-count">0</div>
+            <div class="count-label">Total Agents</div>
+          </div>
+          <span style="font-size:24px">👥</span>
+        </div>
+        <div class="count-box" style="flex:1;min-width:150px">
+          <div>
+            <div class="count-num" id="district-count">0</div>
+            <div class="count-label">Districts Covered</div>
+          </div>
+          <span style="font-size:24px">🗺️</span>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="agent-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Username</th>
+              <th>Mobile</th>
+              <th>District</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="agents-tbody">
+            <tr><td colspan="6" style="color:var(--muted);text-align:center;padding:20px">No agents registered yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRIGGER TAB -->
+  <div id="tab-trigger" class="panel">
+    <div class="card">
+      <div class="card-title">📱 Fast2SMS Status</div>
+      <div id="sms-status-box" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
+        <span id="sms-status-dot" style="width:12px;height:12px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+        <span id="sms-status-text" style="font-size:13px;color:var(--muted)">Checking server...</span>
+        <button class="btn" onclick="checkServer()" style="margin-left:auto;padding:6px 12px;font-size:11px;background:var(--card);border:1px solid var(--border);color:var(--text)">🔄 Refresh</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">⚡ Fast2SMS — எல்லா Indian numbers-க்கும் SMS போகும்! Verify தேவையில்ல.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🚨 Trigger High Risk Alert by District</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Select a district to send HIGH RISK alert SMS to all registered agents in that district:</p>
+      <div class="district-grid" id="district-grid"></div>
+
+      <div class="form-group">
+        <label>Custom Alert Message (optional)</label>
+        <input type="text" id="custom-msg" placeholder="Leave blank for default message">
+      </div>
+
+      <button class="btn btn-danger" onclick="triggerAlert()" id="trigger-btn">
+        🚨 Send Alert SMS Now
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📜 SMS Send Log</div>
+      <div class="log-box" id="sms-log">
+        <div class="log-entry"><span class="log-info">[ SYSTEM ]</span><span>SMS log will appear here when you trigger alerts...</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETUP TAB -->
+  <div id="tab-setup" class="panel">
+    <div class="card">
+      <div class="card-title">⚙️ Twilio Setup Guide (Free)</div>
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Twilio Account Create பண்ணுங்க (Free)</h4>
+          <p>Go to <a href="https://www.twilio.com/try-twilio" target="_blank">twilio.com/try-twilio</a> → Sign up free → Verify your phone number</p>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Free Phone Number எடுங்க</h4>
+          <p>Console → Phone Numbers → Get a number (free trial number). இதை உங்கோட "From Number"ஆ use பண்ணுங்க.</p>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>API Keys Copy பண்ணுங்க</h4>
+          <p>Console Dashboard-ல் <code>Account SID</code> & <code>Auth Token</code> இருக்கும். அதை Trigger tab-ல் paste பண்ணுங்க.</p>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Trial Limitation</h4>
+          <p>Free trial-ல் only verified numbers-களுக்கு SMS போகும். Production-க்கு upgrade பண்ணினா எல்லா numbers-க்கும் போகும். (~$15/month)</p>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h4>CORS Issue Fix — Backend Proxy Use</h4>
+          <p>Browser-ல் நேரடியா Twilio call பண்ண CORS block ஆகலாம். இதுக்கு ஒரு simple Node.js proxy வேணும்:</p>
+          <p style="margin-top:8px"><code>npm install express twilio cors</code></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🖥️ Backend Server Code (Node.js)</div>
+      <div class="config-box" style="white-space:pre;overflow-x:auto;line-height:1.8">
+<span class="key">// server.js — Run: node server.js</span>
+<span class="val">const</span> express = require('express');
+<span class="val">const</span> twilio = require('twilio');
+<span class="val">const</span> cors = require('cors');
+<span class="val">const</span> app = express();
+
+app.use(cors()); app.use(express.json());
+
+app.post(<span class="key">'/send-sms'</span>, async (req, res) => {
+  <span class="val">const</span> { to, message, sid, token, from } = req.body;
+  <span class="val">const</span> client = twilio(sid, token);
+  <span class="val">try</span> {
+    <span class="val">const</span> msg = await client.messages.create({
+      body: message, from: from, to: <span class="key">'+91'</span> + to
+    });
+    res.json({ success: true, sid: msg.sid });
+  } <span class="val">catch</span>(e) {
+    res.json({ success: false, error: e.message });
+  }
+});
+
+app.listen(3001, () => console.log(<span class="key">'SMS Server: http://localhost:3001'</span>));
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">உங்கோட main project-ல் இந்த server.js add பண்ணி run பண்ணுங்க. Then Trigger tab உங்கோட system-ல் work ஆகும்.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔗 Auto-Trigger Integration Code</div>
+      <div class="config-box" style="white-space:pre;overflow-x:auto;line-height:1.8">
+<span class="key">// உங்கோட existing website-ல் இந்த function add பண்ணுங்க</span>
+
+<span class="val">async function</span> checkAndAlertDistrict(district, riskLevel) {
+  <span class="val">if</span> (riskLevel === <span class="key">'HIGH'</span>) {
+    <span class="val">const</span> agents = JSON.parse(
+      localStorage.getItem(<span class="key">'healthAgents'</span>) || <span class="key">'[]'</span>
+    );
+    <span class="val">const</span> targets = agents.filter(a => a.district === district);
+    
+    <span class="val">for</span> (<span class="val">const</span> agent <span class="val">of</span> targets) {
+      await fetch(<span class="key">'http://localhost:3001/send-sms'</span>, {
+        method: <span class="key">'POST'</span>,
+        headers: { <span class="key">'Content-Type'</span>: <span class="key">'application/json'</span> },
+        body: JSON.stringify({
+          to: agent.mobile,
+          message: <span class="key">`🚨 HIGH RISK ALERT!\nDistrict: ${district}\nDear ${agent.username}, immediate action required!\nLogin: yourwebsite.com`</span>,
+          sid: <span class="key">'YOUR_TWILIO_SID'</span>,
+          token: <span class="key">'YOUR_AUTH_TOKEN'</span>,
+          from: <span class="key">'YOUR_TWILIO_NUMBER'</span>
+        })
+      });
+    }
+  }
+}
+
+<span class="key">// Call this from your website when risk detected:</span>
+<span class="val">checkAndAlertDistrict</span>(<span class="key">'Chennai'</span>, <span class="key">'HIGH'</span>);
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- STATE ----
+let agents = JSON.parse(localStorage.getItem('healthAgents') || '[]');
+let selectedDistrict = '';
+
+const DISTRICTS = ['Chennai','Coimbatore','Madurai','Salem','Tiruchirappalli','Tirunelveli',
+  'Vellore','Erode','Tiruppur','Dindigul','Thanjavur','Ranipet','Krishnagiri','Dharmapuri',
+  'Nagapattinam','Cuddalore','Villupuram','Kancheepuram','Chengalpattu','Tenkasi'];
+
+// ---- TABS ----
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'agents') renderAgents();
+  if (name === 'trigger') renderDistrictGrid();
+}
+
+// ---- REGISTER ----
+function registerAgent() {
+  const username = document.getElementById('reg-username').value.trim();
+  const mobile = document.getElementById('reg-mobile').value.trim();
+  const district = document.getElementById('reg-district').value;
+
+  if (!username) return toast('Username enter பண்ணுங்க', 'error');
+  if (!/^\d{10}$/.test(mobile)) return toast('Valid 10-digit mobile number enter பண்ணுங்க', 'error');
+  if (!district) return toast('District select பண்ணுங்க', 'error');
+
+  const exists = agents.find(a => a.mobile === mobile);
+  if (exists) return toast('இந்த mobile number already registered!', 'error');
+
+  const agent = { id: Date.now(), username, mobile, district, registered: new Date().toLocaleString('en-IN') };
+  agents.push(agent);
+  localStorage.setItem('healthAgents', JSON.stringify(agents));
+
+  toast(`✅ ${username} — ${district} district-ல் registered!`, 'success');
+  updateSMSPreview(username, district);
+
+  // Clear form
+  document.getElementById('reg-username').value = '';
+  document.getElementById('reg-mobile').value = '';
+  document.getElementById('reg-district').value = '';
+}
+
+// ---- SMS PREVIEW ----
+document.getElementById('reg-username').addEventListener('input', updatePreview);
+document.getElementById('reg-district').addEventListener('change', updatePreview);
+function updatePreview() {
+  const u = document.getElementById('reg-username').value || 'Agent';
+  const d = document.getElementById('reg-district').value || 'Your District';
+  updateSMSPreview(u, d);
+}
+function updateSMSPreview(user, district) {
+  document.getElementById('sms-preview').textContent =
+`🚨 HIGH RISK ALERT — Tamil Nadu Health
+━━━━━━━━━━━━━━━━━━━━
+District: ${district}
+Agent: ${user}
+
+உங்கோட district-ல் HIGH RISK நிலை detect ஆகியது. Immediate action தேவை.
+
+🔗 Login: yourwebsite.com
+📞 Helpline: 104
+
+— TN Health Dept`;
+}
+
+// ---- RENDER AGENTS ----
+function renderAgents() {
+  const tbody = document.getElementById('agents-tbody');
+  const districts = [...new Set(agents.map(a => a.district))];
+  document.getElementById('total-count').textContent = agents.length;
+  document.getElementById('district-count').textContent = districts.length;
+
+  if (!agents.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:20px">No agents registered yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = agents.map((a, i) => `
+    <tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><strong>${a.username}</strong></td>
+      <td style="font-family:'JetBrains Mono',monospace">${a.mobile}</td>
+      <td><span class="badge badge-yellow">📍 ${a.district}</span></td>
+      <td><span class="badge badge-green">✅ Active</span></td>
+      <td><button class="btn" style="padding:4px 10px;font-size:11px;background:rgba(239,68,68,0.15);color:var(--accent2);border:1px solid var(--accent2)" onclick="removeAgent(${a.id})">Remove</button></td>
+    </tr>
+  `).join('');
+}
+
+function removeAgent(id) {
+  agents = agents.filter(a => a.id !== id);
+  localStorage.setItem('healthAgents', JSON.stringify(agents));
+  renderAgents();
+  toast('Agent removed', 'error');
+}
+
+// ---- DISTRICT GRID ----
+function renderDistrictGrid() {
+  const grid = document.getElementById('district-grid');
+  const activeDist = [...new Set(agents.map(a => a.district))];
+  grid.innerHTML = DISTRICTS.map(d => {
+    const count = agents.filter(a => a.district === d).length;
+    const hasAgents = count > 0;
+    return `<button class="district-btn ${hasAgents ? '' : 'disabled'}"
+      style="${!hasAgents ? 'opacity:0.4;cursor:not-allowed' : ''}"
+      onclick="${hasAgents ? `selectDistrict('${d}')` : ''}"
+      id="dbtn-${d.replace(/\s/g,'_')}">
+      📍 ${d} ${hasAgents ? `<br><span style="color:var(--green);font-size:10px">${count} agents</span>` : '<br><span style="font-size:10px;color:var(--muted)">no agents</span>'}
+    </button>`;
+  }).join('');
+}
+
+function selectDistrict(d) {
+  selectedDistrict = d;
+  document.querySelectorAll('.district-btn').forEach(b => b.classList.remove('selected'));
+  const btn = document.getElementById('dbtn-' + d.replace(/\s/g,'_'));
+  if (btn) btn.classList.add('selected');
+}
+
+// ---- SERVER STATUS CHECK ----
+async function checkServer() {
+  const dot = document.getElementById('sms-status-dot');
+  const txt = document.getElementById('sms-status-text');
+  try {
+    const res = await fetch('http://localhost:3001/health', { signal: AbortSignal.timeout(3000) });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      dot.style.background = 'var(--green)';
+      dot.style.boxShadow = '0 0 8px var(--green)';
+      txt.style.color = 'var(--green)';
+      txt.textContent = '✅ Fast2SMS Gateway Active — எல்லா Indian numbers SMS ready!';
+      // Load agents from server
+      loadAgentsFromServer();
+    }
+  } catch(e) {
+    dot.style.background = 'var(--accent2)';
+    txt.style.color = 'var(--accent2)';
+    txt.textContent = '❌ Server offline — Terminal-ல் run பண்ணுங்க: node backend/sms_server.js';
+  }
+}
+
+async function loadAgentsFromServer() {
+  try {
+    const res = await fetch('http://localhost:3001/agents');
+    const data = await res.json();
+    if (data.agents && data.agents.length > 0) {
+      // Merge server agents with local
+      data.agents.forEach(sa => {
+        if (!agents.find(a => a.mobile === sa.phone)) {
+          agents.push({ id: Date.now() + Math.random(), username: sa.username, mobile: sa.phone, district: sa.district });
+        }
+      });
+      localStorage.setItem('healthAgents', JSON.stringify(agents));
+    }
+  } catch(e) {}
+}
+
+// ---- TRIGGER ALERT ----
+async function triggerAlert() {
+  if (!selectedDistrict) return toast('District select பண்ணுங்க', 'error');
+
+  const customMsg = document.getElementById('custom-msg').value.trim();
+  const targets = agents.filter(a => a.district === selectedDistrict);
+  if (!targets.length) return toast('இந்த district-ல் agents இல்ல', 'error');
+
+  const btn = document.getElementById('trigger-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending...';
+
+  addLog('info', `🚨 HIGH RISK Alert → ${selectedDistrict} (${targets.length} agents)`);
+
+  // Try district bulk send first
+  try {
+    const bulkRes = await fetch('http://localhost:3001/send-district-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ district: selectedDistrict, message: customMsg || null })
+    });
+    const bulkData = await bulkRes.json();
+    if (bulkData.success) {
+      bulkData.results.forEach(r => {
+        if (r.success) addLog('ok', `✅ SMS sent → ${r.agent} (${r.phone})`);
+        else addLog('err', `❌ Failed → ${r.agent}: ${r.error || 'Unknown'}`);
+      });
+      btn.disabled = false;
+      btn.textContent = '🚨 Send Alert SMS Now';
+      toast(`✅ ${bulkData.sent}/${bulkData.total} SMS sent to ${selectedDistrict}!`, 'success');
+      return;
+    }
+  } catch(e) {}
+
+  // Fallback: send one by one
+  for (const agent of targets) {
+    const message = customMsg ||
+`🚨 HIGH RISK ALERT — TN Health
+District: ${agent.district}
+Agent: ${agent.username}
+Immediate action required!
+Login: yourwebsite.com
+Helpline: 104`;
+
+    try {
+      const res = await fetch('http://localhost:3001/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: agent.mobile, message })
+      });
+      const data = await res.json();
+      if (data.success) {
+        addLog('ok', `✅ SMS sent → ${agent.username} (${agent.mobile})`);
+      } else {
+        addLog('err', `❌ Failed → ${agent.username}: ${data.error}`);
+      }
+    } catch(e) {
+      addLog('err', `❌ Error → ${agent.username}: Server running-ஆ இருக்கா?`);
+    }
+    await new Promise(r => setTimeout(r, 400));
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🚨 Send Alert SMS Now';
+  toast(`Alert sent to ${targets.length} agents in ${selectedDistrict}!`, 'success');
+}
+
+// ---- LOG ----
+function addLog(type, msg) {
+  const log = document.getElementById('sms-log');
+  const time = new Date().toLocaleTimeString('en-IN');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">[${time}]</span><span class="log-${type}">${msg}</span>`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ---- TOAST ----
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Init
+updateSMSPreview('HealthAgent_01', 'Chennai');
+checkServer();
+</script>
+</body>
+</html>
